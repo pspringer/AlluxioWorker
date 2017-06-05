@@ -42,15 +42,79 @@ struct TTtlAction {
 
 extern const std::map<int, const char*> _TTtlAction_VALUES_TO_NAMES;
 
+class WorkerNetAddress;
+
 class BlockInfo;
 
 class BlockLocation;
 
 class Command;
 
-class WorkerNetAddress;
-
 class RpcOptions;
+
+typedef struct _WorkerNetAddress__isset {
+  _WorkerNetAddress__isset() : host(false), rpcPort(false), dataPort(false), webPort(false) {}
+  bool host :1;
+  bool rpcPort :1;
+  bool dataPort :1;
+  bool webPort :1;
+} _WorkerNetAddress__isset;
+
+class WorkerNetAddress : public virtual ::apache::thrift::TBase {
+ public:
+
+  WorkerNetAddress(const WorkerNetAddress&);
+  WorkerNetAddress& operator=(const WorkerNetAddress&);
+  WorkerNetAddress() : host(), rpcPort(0), dataPort(0), webPort(0) {
+  }
+
+  virtual ~WorkerNetAddress() throw();
+  std::string host;
+  int32_t rpcPort;
+  int32_t dataPort;
+  int32_t webPort;
+
+  _WorkerNetAddress__isset __isset;
+
+  void __set_host(const std::string& val);
+
+  void __set_rpcPort(const int32_t val);
+
+  void __set_dataPort(const int32_t val);
+
+  void __set_webPort(const int32_t val);
+
+  bool operator == (const WorkerNetAddress & rhs) const
+  {
+    if (!(host == rhs.host))
+      return false;
+    if (!(rpcPort == rhs.rpcPort))
+      return false;
+    if (!(dataPort == rhs.dataPort))
+      return false;
+    if (!(webPort == rhs.webPort))
+      return false;
+    return true;
+  }
+  bool operator != (const WorkerNetAddress &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const WorkerNetAddress & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(WorkerNetAddress &a, WorkerNetAddress &b);
+
+inline std::ostream& operator<<(std::ostream& out, const WorkerNetAddress& obj)
+{
+  obj.printTo(out);
+  return out;
+}
 
 typedef struct _BlockInfo__isset {
   _BlockInfo__isset() : blockId(false), length(false), locations(false) {}
@@ -215,70 +279,6 @@ class Command : public virtual ::apache::thrift::TBase {
 void swap(Command &a, Command &b);
 
 inline std::ostream& operator<<(std::ostream& out, const Command& obj)
-{
-  obj.printTo(out);
-  return out;
-}
-
-typedef struct _WorkerNetAddress__isset {
-  _WorkerNetAddress__isset() : host(false), rpcPort(false), dataPort(false), webPort(false) {}
-  bool host :1;
-  bool rpcPort :1;
-  bool dataPort :1;
-  bool webPort :1;
-} _WorkerNetAddress__isset;
-
-class WorkerNetAddress : public virtual ::apache::thrift::TBase {
- public:
-
-  WorkerNetAddress(const WorkerNetAddress&);
-  WorkerNetAddress& operator=(const WorkerNetAddress&);
-  WorkerNetAddress() : host(), rpcPort(0), dataPort(0), webPort(0) {
-  }
-
-  virtual ~WorkerNetAddress() throw();
-  std::string host;
-  int32_t rpcPort;
-  int32_t dataPort;
-  int32_t webPort;
-
-  _WorkerNetAddress__isset __isset;
-
-  void __set_host(const std::string& val);
-
-  void __set_rpcPort(const int32_t val);
-
-  void __set_dataPort(const int32_t val);
-
-  void __set_webPort(const int32_t val);
-
-  bool operator == (const WorkerNetAddress & rhs) const
-  {
-    if (!(host == rhs.host))
-      return false;
-    if (!(rpcPort == rhs.rpcPort))
-      return false;
-    if (!(dataPort == rhs.dataPort))
-      return false;
-    if (!(webPort == rhs.webPort))
-      return false;
-    return true;
-  }
-  bool operator != (const WorkerNetAddress &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const WorkerNetAddress & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  virtual void printTo(std::ostream& out) const;
-};
-
-void swap(WorkerNetAddress &a, WorkerNetAddress &b);
-
-inline std::ostream& operator<<(std::ostream& out, const WorkerNetAddress& obj)
 {
   obj.printTo(out);
   return out;

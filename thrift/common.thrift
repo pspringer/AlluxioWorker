@@ -1,6 +1,16 @@
 namespace java alluxio.thrift
 
 /**
+* Address information about workers.
+*/
+struct WorkerNetAddress {
+  1: string host
+  2: i32 rpcPort
+  3: i32 dataPort
+  4: i32 webPort
+}
+
+/**
 * Contains the information of a block in Alluxio. It maintains the worker nodes where the replicas
 * of the blocks are stored.
 */
@@ -36,16 +46,6 @@ enum TTtlAction {
 struct Command {
   1: CommandType commandType
   2: list<i64> data
-}
-
-/**
-* Address information about workers.
-*/
-struct WorkerNetAddress {
-  1: string host
-  2: i32 rpcPort
-  3: i32 dataPort
-  4: i32 webPort
 }
 
 /**
