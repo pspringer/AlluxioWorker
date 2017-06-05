@@ -39,8 +39,19 @@ int main()
 	    cout << "Got version " << sv << endl;
 
 	    cout << "Requesting ID" << endl;
-	    long theID = client.getWorkerId(WorkerNetAddress());
+	    int64_t theID = client.getWorkerId(WorkerNetAddress());
 	    cout << "Received " << theID << endl;
+
+	    cout << "Registering..." << endl;
+	    vector<string> storageTiers(1,"one");
+	    map<string,int64_t> totalBytesOnTiers;
+	    totalBytesOnTiers["one"] = 876000;
+	    map<string,int64_t> usedBytesOnTiers;
+	    usedBytesOnTiers["one"] = 65000;
+	    map<string,vector<int64_t>> currentBlocksOnTiers;
+	    currentBlocksOnTiers["one"] = vector<int64_t>();
+	    client.registerWorker(theID, storageTiers, totalBytesOnTiers,
+	        usedBytesOnTiers, currentBlocksOnTiers);
 
 	    transport->close();
 		}
