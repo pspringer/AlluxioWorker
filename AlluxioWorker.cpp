@@ -12,6 +12,7 @@
 #include "thrift/protocol/TMultiplexedProtocol.h"
 #include "BlockMasterWorkerService.h"
 #include "exception_types.h"
+#include "FileSystemWorker.h"
 
 using namespace std;
 using namespace apache::thrift;
@@ -20,6 +21,9 @@ using namespace apache::thrift::protocol;
 
 int main()
 	{
+	FileSystemWorker*	aFileSystemWorker;
+	unsigned char		msgBuf[1024];
+
 	boost::shared_ptr<TTransport> socket(new TSocket("192.168.1.137", 19998));
 	boost::shared_ptr<TTransport> transport(new TFramedTransport(socket));
 	boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
@@ -34,12 +38,28 @@ int main()
 		cout << "Open transport" << endl;
 	    transport->open();
 
+	    cout << "Sending PLAIN" << endl;
+	    memcpy( msgBuf, "\x01\x00\x00\x00\x05PLAIN", 10);
+	    socket->write(msgBuf,10);
+
+	    cout << "Sending noPassword" << endl;
+	    memcpy( msgBuf, "\x05\x00\x00\x00\x0f\x00pls\x00noPassword", 20);
+	    socket->write(msgBuf,20);
+
+	    cout<< "Waiting for read" << endl;
+	    socket->read(msgBuf,1024);
+	    cout << msgBuf << endl;
+
 	    cout << "Requesting version" << endl;
 	    int sv = client.getServiceVersion();
 	    cout << "Got version " << sv << endl;
 
 	    cout << "Requesting ID" << endl;
-	    int64_t theID = client.getWorkerId(WorkerNetAddress());
+	    WorkerNetAddress wna = WorkerNetAddress();
+	    wna.__set_host("192.168.1.129");
+	    wna.__set_rpcPort(29998);
+//	    int64_t theID = client.getWorkerId(WorkerNetAddress("192.168.1.129",0,0,0));
+	    int64_t theID = client.getWorkerId(wna);
 	    cout << "Received " << theID << endl;
 
 	    cout << "Registering..." << endl;
@@ -55,9 +75,12 @@ int main()
 
 	    transport->close();
 		}
-		catch (TException& tx)
-			{
-			cout << "ERROR: " << tx.what() << endl;
-			}
+	catch (TException& tx)
+		{
+		cout << "ERROR: " << tx.what() << endl;
+		}
+
+	// start up FileSystemWorker
+	aFileSystemWorker = new FileSystemWorker();
 	return 0;
 	}
