@@ -10,6 +10,7 @@
 #include "thrift/transport/TBufferTransports.h"
 #include "thrift/protocol/TBinaryProtocol.h"
 #include "thrift/protocol/TMultiplexedProtocol.h"
+#include "thrift/TOutput.h"
 #include "BlockMasterWorkerService.h"
 #include "exception_types.h"
 #include "FileSystemWorker.h"
@@ -30,6 +31,7 @@ int main()
 	boost::shared_ptr<TProtocol> mprotocol(new TMultiplexedProtocol(protocol, "BlockMasterWorker"));
 
 //  Create a client to use the protocol encoder
+	GlobalOutput.printf( "Starting main\n" );
 	BlockMasterWorkerServiceClient client(mprotocol);
 
 	try
@@ -73,7 +75,7 @@ int main()
 	    client.registerWorker(theID, storageTiers, totalBytesOnTiers,
 	        usedBytesOnTiers, currentBlocksOnTiers);
 
-	    transport->close();
+//	    transport->close();
 		}
 	catch (TException& tx)
 		{
@@ -82,5 +84,9 @@ int main()
 
 	// start up FileSystemWorker
 	aFileSystemWorker = new FileSystemWorker();
+	cout << "Starting loop\n";
+	while (1)
+		{
+		}
 	return 0;
 	}
