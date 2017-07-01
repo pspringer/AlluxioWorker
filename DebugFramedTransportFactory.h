@@ -14,6 +14,10 @@
 
 using namespace apache::thrift::transport;
 
+/**
+ * Wraps a transport into a framed one.
+ *
+ */
 class DebugFramedTransportFactory: public apache::thrift::transport::TFramedTransportFactory {
 public:
 	DebugFramedTransportFactory() {}

@@ -19,6 +19,7 @@
 #include "FileSystemWorkerClientServiceHandler.h"
 #include "DebugFSWCSP.h"
 #include "DebugFramedTransportFactory.h"
+#include "DebugServerSocket.h"
 
 using namespace std;
 using namespace apache::thrift;
@@ -72,7 +73,7 @@ void FileSystemWorker::callback(THRIFT_SOCKET client)
 	bzero(buf, sizeof(buf));
 	buf[0] = 5;
 	// or use write()
-	send( client, buf, 6, 0);
+	send( client, buf, 5, 0);
 	cout << "Connection complete\n";
 	int retgsn = getsockname( client, (sockaddr*)&sin, &sinlen);
 	if (retgsn != 0)
@@ -107,8 +108,8 @@ void FileSystemWorker::callback(THRIFT_SOCKET client)
 FileSystemWorker::FileSystemWorker()
 	{
 	cout << "Starting FileSystemWorker\n";
-	boost::shared_ptr<TServerTransport> 	aTransport( new TServerSocket( 29998 ));
-	boost::shared_ptr<TServerSocket> serverSocket = boost::dynamic_pointer_cast<TServerSocket>(aTransport);
+	boost::shared_ptr<TServerTransport> 	aTransport( new DebugServerSocket( 29998 ));
+	boost::shared_ptr<DebugServerSocket> serverSocket = boost::dynamic_pointer_cast<DebugServerSocket>(aTransport);
 	TServerSocket::socket_func_t cb = &(FileSystemWorker::callback);
 	serverSocket->setAcceptCallback(cb);
 	boost::shared_ptr<DebugFSWCSP> fsProc(new DebugFSWCSP( boost::make_shared<FileSystemWorkerClientServiceHandler>()));
