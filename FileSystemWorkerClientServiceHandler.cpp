@@ -15,7 +15,7 @@ using namespace ::apache::thrift::server;
 
 using boost::shared_ptr;
 
-FileSystemWorkerClientServiceHandler::FileSystemWorkerClientServiceHandler()
+FileSystemWorkerClientServiceHandler::FileSystemWorkerClientServiceHandler(shared_ptr<FileSystemWorker> fsWorker)
 
   {
     // Your initialization goes here
@@ -53,7 +53,7 @@ FileSystemWorkerClientServiceHandler::FileSystemWorkerClientServiceHandler()
    */
   void FileSystemWorkerClientServiceHandler::closeUfsFile(const int64_t sessionId, const int64_t tempUfsFileId, const CloseUfsFileTOptions& options) {
     // Your implementation goes here
-    printf("closeUfsFile\n");
+    printf("closeUfsFile for session %lld, file %lld\n", sessionId, tempUfsFileId);
   }
 
   /**
@@ -97,8 +97,8 @@ FileSystemWorkerClientServiceHandler::FileSystemWorkerClientServiceHandler()
    */
   int64_t FileSystemWorkerClientServiceHandler::openUfsFile(const int64_t sessionId, const std::string& ufsPath, const OpenUfsFileTOptions& options) {
     // Your implementation goes here
-    printf("openUfsFile\n");
-    return(-1);
+    printf("openUfsFile for session %lld, file %s\n", sessionId, ufsPath.c_str());
+    return(1);
   }
 
   /**

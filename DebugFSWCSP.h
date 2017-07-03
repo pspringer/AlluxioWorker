@@ -9,6 +9,7 @@
 #define TESTFSWCSP_H_
 
 #include "FileSystemWorkerClientService.h"
+#include "BlockWorkerClientService.h"
 
 class DebugFSWCSP: public FileSystemWorkerClientServiceProcessor {
 public:

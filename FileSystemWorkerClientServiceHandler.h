@@ -9,12 +9,13 @@
 #define FILESYSTEMWORKERCLIENTSERVICEHANDLER_H_
 
 #include "FileSystemWorkerClientService.h"
+#include "FileSystemWorker.h"
 
 class FileSystemWorkerClientServiceHandler :
 		virtual public FileSystemWorkerClientServiceIf
 {
  public:
-  FileSystemWorkerClientServiceHandler();
+  FileSystemWorkerClientServiceHandler(boost::shared_ptr<FileSystemWorker> fsWorker);
   int64_t getServiceVersion();
 
   void cancelUfsFile(const int64_t sessionId, const int64_t tempUfsFileId, const CancelUfsFileTOptions& options);

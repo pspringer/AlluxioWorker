@@ -6,23 +6,71 @@
  */
 
 #include <iostream>
+#include <boost/make_shared.hpp>
+
 #include "thrift/transport/TSocket.h"
 #include "thrift/transport/TBufferTransports.h"
 #include "thrift/protocol/TBinaryProtocol.h"
 #include "thrift/protocol/TMultiplexedProtocol.h"
 #include "thrift/TOutput.h"
+#include "thrift/processor/TMultiplexedProcessor.h"
+#include "thrift/server/TSimpleServer.h"
+#include "thrift/server/TThreadedServer.h"
+
 #include "BlockMasterWorkerService.h"
 #include "exception_types.h"
 #include "FileSystemWorker.h"
+#include "BlockWorker.h"
+#include "FileSystemWorker.h"
+#include "FileSystemWorkerClientService.h"
+#include "FileSystemWorkerClientServiceHandler.h"
+#include "BlockWorkerClientServiceHandler.h"
+#include "DebugFSWCSP.h"
+#include "DebugFramedTransportFactory.h"
+#include "DebugServerSocket.h"
 
 using namespace std;
 using namespace apache::thrift;
 using namespace apache::thrift::transport;
 using namespace apache::thrift::protocol;
+using namespace apache::thrift::server;
+
+void createThriftServer()
+	{
+	boost::shared_ptr<FileSystemWorker> theFileSystemWorker(new FileSystemWorker());
+	boost::shared_ptr<BlockWorker> aBlockorker(new BlockWorker());
+	boost::shared_ptr<TServerTransport> 	aTransport( new TServerSocket( 29998 ));
+	boost::shared_ptr<TServerSocket> serverSocket = boost::dynamic_pointer_cast<TServerSocket>(aTransport);
+	TServerSocket::socket_func_t cb = &(FileSystemWorker::callback);
+	serverSocket->setAcceptCallback(cb);
+	boost::shared_ptr<TMultiplexedProcessor> RPCProc( new TMultiplexedProcessor );
+	boost::shared_ptr<DebugFSWCSP> fsProc(new DebugFSWCSP( boost::make_shared<FileSystemWorkerClientServiceHandler>(theFileSystemWorker)));
+	RPCProc->registerProcessor("FileSystemWorkerClient", fsProc);
+	boost::shared_ptr<BlockWorkerClientServiceProcessor> bwProc(new BlockWorkerClientServiceProcessor( boost::make_shared<BlockWorkerClientServiceHandler>()));
+	RPCProc->registerProcessor("BlockMasterClient", bwProc);
+	TThreadedServer server( RPCProc,serverSocket,
+			boost::make_shared<DebugFramedTransportFactory>(),
+			boost::make_shared<TBinaryProtocolFactory>() );
+//	TSimpleServer server( fsmProc,serverSocket,
+//			boost::make_shared<DebugFramedTransportFactory>(),
+//			boost::make_shared<TBinaryProtocolFactory>() );
+//	TSimpleServer server( fsmProc,serverSocket,
+//			boost::make_shared<TBufferedTransportFactory>(),
+//			boost::make_shared<TBinaryProtocolFactory>() );
+//	TSimpleServer server( fsProc,serverSocket,
+//			boost::make_shared<TFramedTransportFactory>(),
+//			boost::make_shared<TBinaryProtocolFactory>() );
+//	TSimpleServer server( boost::make_shared<FileSystemWorkerClientServiceProcessor>(boost::make_shared<FileSystemWorkerClientServiceHandler>()),serverSocket,
+//			boost::make_shared<TFramedTransportFactory>(),
+//			boost::make_shared<TBinaryProtocolFactory>() );
+
+	cout << "Serving\n";
+	server.serve();
+	cout << "Terminating\n";
+	}
 
 int main()
 	{
-	FileSystemWorker*	aFileSystemWorker;
 	unsigned char		msgBuf[1024];
 
 	boost::shared_ptr<TTransport> socket(new TSocket("192.168.1.137", 19998));
@@ -82,8 +130,8 @@ int main()
 		cout << "ERROR: " << tx.what() << endl;
 		}
 
-	// start up FileSystemWorker
-	aFileSystemWorker = new FileSystemWorker();
+	// start up FileSystemWorker & BlockWorker
+	createThriftServer();
 	cout << "Starting loop\n";
 	while (1)
 		{

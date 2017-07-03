@@ -16,7 +16,6 @@ using apache::thrift::transport::TTransportException;
 
 DebugFSWCSP::DebugFSWCSP(boost::shared_ptr<FileSystemWorkerClientServiceIf> iface):FileSystemWorkerClientServiceProcessor(iface)
 	{
-
 	}
 
 bool DebugFSWCSP::dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext)
