@@ -16,6 +16,8 @@
 #include "thrift/processor/TMultiplexedProcessor.h"
 #include "thrift/server/TSimpleServer.h"
 #include "thrift/server/TThreadedServer.h"
+#include "thrift/server/TNonblockingServer.h"
+#include "thrift/concurrency/ThreadManager.h"
 
 #include "BlockMasterWorkerService.h"
 #include "exception_types.h"
@@ -28,19 +30,24 @@
 #include "DebugFSWCSP.h"
 #include "DebugFramedTransportFactory.h"
 #include "DebugServerSocket.h"
+#include "DualThreadedServer.h"
+#include "NonblockingServerSocket.h"
 
 using namespace std;
 using namespace apache::thrift;
 using namespace apache::thrift::transport;
 using namespace apache::thrift::protocol;
 using namespace apache::thrift::server;
+using namespace apache::thrift::concurrency;
 
 void createThriftServer()
 	{
 	boost::shared_ptr<FileSystemWorker> theFileSystemWorker(new FileSystemWorker());
-	boost::shared_ptr<BlockWorker> aBlockorker(new BlockWorker());
-	boost::shared_ptr<TServerTransport> 	aTransport( new TServerSocket( 29998 ));
+	boost::shared_ptr<BlockWorker> aBlockWorker(new BlockWorker());
+	boost::shared_ptr<TServerTransport>	aTransport( new NonblockingServerSocket( 29998 ));
 	boost::shared_ptr<TServerSocket> serverSocket = boost::dynamic_pointer_cast<TServerSocket>(aTransport);
+	boost::shared_ptr<TServerTransport>	nettyTransport( new NonblockingServerSocket( 29999 ));
+	boost::shared_ptr<TServerSocket> nettySocket = boost::dynamic_pointer_cast<TServerSocket>(nettyTransport);
 	TServerSocket::socket_func_t cb = &(FileSystemWorker::callback);
 	serverSocket->setAcceptCallback(cb);
 	boost::shared_ptr<TMultiplexedProcessor> RPCProc( new TMultiplexedProcessor );
@@ -48,7 +55,14 @@ void createThriftServer()
 	RPCProc->registerProcessor("FileSystemWorkerClient", fsProc);
 	boost::shared_ptr<BlockWorkerClientServiceProcessor> bwProc(new BlockWorkerClientServiceProcessor( boost::make_shared<BlockWorkerClientServiceHandler>()));
 	RPCProc->registerProcessor("BlockMasterClient", bwProc);
-	TThreadedServer server( RPCProc,serverSocket,
+//	boost::shared_ptr<ThreadManager> stm(ThreadManager::newSimpleThreadManager());
+//	TNonblockingServer server( RPCProc,
+//			boost::make_shared<DebugFramedTransportFactory>(),
+//			boost::make_shared<DebugFramedTransportFactory>(),
+//			boost::make_shared<TBinaryProtocolFactory>(),
+//			boost::make_shared<TBinaryProtocolFactory>(),
+//			29998, stm);
+	DualThreadedServer server( RPCProc,serverSocket,
 			boost::make_shared<DebugFramedTransportFactory>(),
 			boost::make_shared<TBinaryProtocolFactory>() );
 //	TSimpleServer server( fsmProc,serverSocket,
@@ -132,9 +146,4 @@ int main()
 
 	// start up FileSystemWorker & BlockWorker
 	createThriftServer();
-	cout << "Starting loop\n";
-	while (1)
-		{
-		}
-	return 0;
 	}

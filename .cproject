@@ -28,6 +28,8 @@
 								</option>
 								<option id="macosx.cpp.link.option.libs.1702808153" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="thrift"/>
+									<listOptionValue builtIn="false" value="thriftnb"/>
+									<listOptionValue builtIn="false" value="event"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.1269282909" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -56,7 +58,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="DebugServerSocket.cpp|DebugSocket.cpp|oldDebugFramedTransport.cpp|thrift/gen-cpp/FileSystemWorkerClientService_server.skeleton.cpp|thrift/gen-cpp/BlockMasterWorkerService_server.skeleton.cpp|thrift/gen-cpp/BlockMasterClientService_server.skeleton.cpp|thrift/gen-cpp/AlluxioService_server.skeleton.cpp|thrift/gen-cpp/BlockWorkerClientService_server.skeleton.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="DebugSimpleServer.cpp|DebugServerSocket.cpp|DebugSocket.cpp|oldDebugFramedTransport.cpp|thrift/gen-cpp/FileSystemWorkerClientService_server.skeleton.cpp|thrift/gen-cpp/BlockMasterWorkerService_server.skeleton.cpp|thrift/gen-cpp/BlockMasterClientService_server.skeleton.cpp|thrift/gen-cpp/AlluxioService_server.skeleton.cpp|thrift/gen-cpp/BlockWorkerClientService_server.skeleton.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
