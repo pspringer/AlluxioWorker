@@ -45,9 +45,9 @@ void createThriftServer()
 	boost::shared_ptr<FileSystemWorker> theFileSystemWorker(new FileSystemWorker());
 	boost::shared_ptr<BlockWorker> aBlockWorker(new BlockWorker());
 	boost::shared_ptr<TServerTransport>	aTransport( new NonblockingServerSocket( 29998 ));
-	boost::shared_ptr<TServerSocket> serverSocket = boost::dynamic_pointer_cast<TServerSocket>(aTransport);
+	boost::shared_ptr<NonblockingServerSocket> serverSocket = boost::dynamic_pointer_cast<NonblockingServerSocket>(aTransport);
 	boost::shared_ptr<TServerTransport>	nettyTransport( new NonblockingServerSocket( 29999 ));
-	boost::shared_ptr<TServerSocket> nettySocket = boost::dynamic_pointer_cast<TServerSocket>(nettyTransport);
+	boost::shared_ptr<NonblockingServerSocket> nettySocket = boost::dynamic_pointer_cast<NonblockingServerSocket>(nettyTransport);
 	TServerSocket::socket_func_t cb = &(FileSystemWorker::callback);
 	serverSocket->setAcceptCallback(cb);
 	boost::shared_ptr<TMultiplexedProcessor> RPCProc( new TMultiplexedProcessor );
