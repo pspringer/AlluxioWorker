@@ -58,7 +58,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="DebugSimpleServer.cpp|DebugServerSocket.cpp|DebugSocket.cpp|oldDebugFramedTransport.cpp|thrift/gen-cpp/FileSystemWorkerClientService_server.skeleton.cpp|thrift/gen-cpp/BlockMasterWorkerService_server.skeleton.cpp|thrift/gen-cpp/BlockMasterClientService_server.skeleton.cpp|thrift/gen-cpp/AlluxioService_server.skeleton.cpp|thrift/gen-cpp/BlockWorkerClientService_server.skeleton.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="oldNonblockingServerSocket.cpp|DebugSimpleServer.cpp|DebugServerSocket.cpp|DebugSocket.cpp|oldDebugFramedTransport.cpp|thrift/gen-cpp/FileSystemWorkerClientService_server.skeleton.cpp|thrift/gen-cpp/BlockMasterWorkerService_server.skeleton.cpp|thrift/gen-cpp/BlockMasterClientService_server.skeleton.cpp|thrift/gen-cpp/AlluxioService_server.skeleton.cpp|thrift/gen-cpp/BlockWorkerClientService_server.skeleton.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

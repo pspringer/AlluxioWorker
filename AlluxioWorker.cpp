@@ -46,10 +46,13 @@ void createThriftServer()
 	boost::shared_ptr<BlockWorker> aBlockWorker(new BlockWorker());
 	boost::shared_ptr<TServerTransport>	aTransport( new NonblockingServerSocket( 29998 ));
 	boost::shared_ptr<NonblockingServerSocket> serverSocket = boost::dynamic_pointer_cast<NonblockingServerSocket>(aTransport);
-	boost::shared_ptr<TServerTransport>	nettyTransport( new NonblockingServerSocket( 29999 ));
-	boost::shared_ptr<NonblockingServerSocket> nettySocket = boost::dynamic_pointer_cast<NonblockingServerSocket>(nettyTransport);
 	TServerSocket::socket_func_t cb = &(FileSystemWorker::callback);
 	serverSocket->setAcceptCallback(cb);
+	serverSocket->setAcceptTimeout(1);	// wait for just 1 ms
+//	serverSocket->setAcceptTimeout(-1);	// block till accept (default)
+	boost::shared_ptr<TServerTransport>	nettyTransport( new NonblockingServerSocket( 29999 ));
+	boost::shared_ptr<NonblockingServerSocket> nettySocket = boost::dynamic_pointer_cast<NonblockingServerSocket>(nettyTransport);
+	nettySocket->setAcceptTimeout(1);	// wait for just 1 ms
 	boost::shared_ptr<TMultiplexedProcessor> RPCProc( new TMultiplexedProcessor );
 	boost::shared_ptr<DebugFSWCSP> fsProc(new DebugFSWCSP( boost::make_shared<FileSystemWorkerClientServiceHandler>(theFileSystemWorker)));
 	RPCProc->registerProcessor("FileSystemWorkerClient", fsProc);
@@ -64,7 +67,8 @@ void createThriftServer()
 //			29998, stm);
 	DualThreadedServer server( RPCProc,serverSocket,
 			boost::make_shared<DebugFramedTransportFactory>(),
-			boost::make_shared<TBinaryProtocolFactory>() );
+			boost::make_shared<TBinaryProtocolFactory>(),
+			nettySocket);
 //	TSimpleServer server( fsmProc,serverSocket,
 //			boost::make_shared<DebugFramedTransportFactory>(),
 //			boost::make_shared<TBinaryProtocolFactory>() );
@@ -122,6 +126,7 @@ int main()
 	    WorkerNetAddress wna = WorkerNetAddress();
 	    wna.__set_host("192.168.1.129");
 	    wna.__set_rpcPort(29998);
+	    wna.__set_dataPort(29999);
 //	    int64_t theID = client.getWorkerId(WorkerNetAddress("192.168.1.129",0,0,0));
 	    int64_t theID = client.getWorkerId(wna);
 	    cout << "Received " << theID << endl;
