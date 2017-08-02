@@ -30,6 +30,11 @@
 #include <thrift/transport/TServerTransport.h>
 #include <thrift/transport/TTransport.h>
 
+#include "NettyProtocol.h"
+#include "NettyProcessor.h"
+#include "NettyConnectedClient.h"
+#include "NettyFramedTransport.h"
+
 namespace apache {
 namespace thrift {
 namespace server {
@@ -69,6 +74,7 @@ public:
       const boost::shared_ptr<apache::thrift::transport::TServerTransport>& serverTransport,
       const boost::shared_ptr<apache::thrift::transport::TTransportFactory>& transportFactory,
       const boost::shared_ptr<apache::thrift::protocol::TProtocolFactory>& protocolFactory,
+      const boost::shared_ptr<apache::thrift::NettyProcessor>& nettyProcessor,
       const boost::shared_ptr<apache::thrift::transport::TServerTransport>& nettyServerTransport,
     const boost::shared_ptr<apache::thrift::concurrency::ThreadFactory>& threadFactory
     = boost::shared_ptr<apache::thrift::concurrency::ThreadFactory>(
@@ -159,6 +165,7 @@ protected:
    * \param[in]  pClient  the newly connected client
    */
   virtual void onClientConnected(const boost::shared_ptr<TConnectedClient>& pClient);
+  virtual void onNettyClientConnected(const boost::shared_ptr<NettyConnectedClient>& pClient);
 
   /**
    * A client has disconnected.
@@ -170,7 +177,12 @@ protected:
    * \param[in]  pClient  the disconnected client
    */
   virtual void onClientDisconnected(TConnectedClient* pClient);
+  virtual void onNettyClientDisconnected(NettyConnectedClient* pClient);
 
+  /**
+   * The processor for the netty I/O side of this server
+   */
+  boost::shared_ptr<apache::thrift::NettyProcessor> nettyProcessor_;
   boost::shared_ptr<TServerTransport> nettyServerTransport_;
   boost::shared_ptr<apache::thrift::concurrency::ThreadFactory> threadFactory_;
 
@@ -191,17 +203,31 @@ protected:
     boost::shared_ptr<TConnectedClient> pClient_;
   };
 
+  class NettyConnectedClientRunner : public apache::thrift::concurrency::Runnable
+  {
+  public:
+    NettyConnectedClientRunner(const boost::shared_ptr<NettyConnectedClient>& pClient);
+    virtual ~NettyConnectedClientRunner();
+    void run() /* override */;
+  private:
+    boost::shared_ptr<NettyConnectedClient> pClient_;
+  };
+
   typedef std::map<TConnectedClient *, boost::shared_ptr<apache::thrift::concurrency::Thread> > ClientMap;
+  typedef std::map<NettyConnectedClient *, boost::shared_ptr<apache::thrift::concurrency::Thread> > NettyClientMap;
 
   /**
    * A map of active clients
    */
   ClientMap activeClientMap_;
+  NettyClientMap nettyActiveClientMap_;
 
   /**
    * A map of clients that have disconnected but their threads have not been joined
    */
   ClientMap deadClientMap_;
+  NettyClientMap nettyDeadClientMap_;
+
 
 private:
   /**
@@ -210,12 +236,14 @@ private:
    * serve() thread if the limit has been reached.
    */
   void newlyConnectedClient(const boost::shared_ptr<TConnectedClient>& pClient);
+  void newlyNettyConnectedClient(const boost::shared_ptr<NettyConnectedClient>& pClient);
 
   /**
    * Smart pointer client deletion.
    * Calls onClientDisconnected and then deletes pClient.
    */
   void disposeConnectedClient(TConnectedClient* pClient);
+  void nettyDisposeConnectedClient(NettyConnectedClient* pClient);
 
   /**
    * Monitor for limiting the number of concurrent clients.

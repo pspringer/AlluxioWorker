@@ -32,6 +32,9 @@
 #include "DebugServerSocket.h"
 #include "DualThreadedServer.h"
 #include "NonblockingServerSocket.h"
+#include "NettyProcessor.h"
+#include "NettyProtocol.h"
+#include "NettyFramedTransport.h"
 
 using namespace std;
 using namespace apache::thrift;
@@ -42,6 +45,13 @@ using namespace apache::thrift::concurrency;
 
 void createThriftServer()
 	{
+	// netty setup
+	boost::shared_ptr<TServerTransport>	nettyServerTransport( new NonblockingServerSocket( 29999 ));
+	boost::shared_ptr<NonblockingServerSocket> nettySocket = boost::dynamic_pointer_cast<NonblockingServerSocket>(nettyServerTransport);
+	nettySocket->setAcceptTimeout(1);	// wait for just 1 ms
+	boost::shared_ptr<NettyProcessor> nettyProc(new NettyProcessor());
+
+	// setup for FileWorker and BlockWorker
 	boost::shared_ptr<FileSystemWorker> theFileSystemWorker(new FileSystemWorker());
 	boost::shared_ptr<BlockWorker> aBlockWorker(new BlockWorker());
 	boost::shared_ptr<TServerTransport>	aTransport( new NonblockingServerSocket( 29998 ));
@@ -50,9 +60,6 @@ void createThriftServer()
 	serverSocket->setAcceptCallback(cb);
 	serverSocket->setAcceptTimeout(1);	// wait for just 1 ms
 //	serverSocket->setAcceptTimeout(-1);	// block till accept (default)
-	boost::shared_ptr<TServerTransport>	nettyTransport( new NonblockingServerSocket( 29999 ));
-	boost::shared_ptr<NonblockingServerSocket> nettySocket = boost::dynamic_pointer_cast<NonblockingServerSocket>(nettyTransport);
-	nettySocket->setAcceptTimeout(1);	// wait for just 1 ms
 	boost::shared_ptr<TMultiplexedProcessor> RPCProc( new TMultiplexedProcessor );
 	boost::shared_ptr<DebugFSWCSP> fsProc(new DebugFSWCSP( boost::make_shared<FileSystemWorkerClientServiceHandler>(theFileSystemWorker)));
 	RPCProc->registerProcessor("FileSystemWorkerClient", fsProc);
@@ -65,10 +72,11 @@ void createThriftServer()
 //			boost::make_shared<TBinaryProtocolFactory>(),
 //			boost::make_shared<TBinaryProtocolFactory>(),
 //			29998, stm);
+	// TODO:  pass netty factories
 	DualThreadedServer server( RPCProc,serverSocket,
 			boost::make_shared<DebugFramedTransportFactory>(),
 			boost::make_shared<TBinaryProtocolFactory>(),
-			nettySocket);
+			nettyProc, nettySocket);
 //	TSimpleServer server( fsmProc,serverSocket,
 //			boost::make_shared<DebugFramedTransportFactory>(),
 //			boost::make_shared<TBinaryProtocolFactory>() );

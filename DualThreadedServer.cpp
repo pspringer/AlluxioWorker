@@ -25,6 +25,7 @@
 #include <thrift/concurrency/ThreadManager.h>
 
 #include "DualThreadedServer.h"
+#include "NettyFramedTransport.h"
 
 namespace apache {
 namespace thrift {
@@ -37,8 +38,10 @@ using apache::thrift::transport::TServerTransport;
 using apache::thrift::transport::TTransport;
 using apache::thrift::transport::TTransportException;
 using apache::thrift::transport::TTransportFactory;
+using apache::thrift::transport::NettyFramedTransport;
 using apache::thrift::protocol::TProtocol;
 using apache::thrift::protocol::TProtocolFactory;
+using apache::thrift::protocol::NettyProtocol;
 using boost::bind;
 using boost::shared_ptr;
 using boost::make_shared;
@@ -60,9 +63,11 @@ DualThreadedServer::DualThreadedServer(const shared_ptr<TProcessor>& processor,
                                    const shared_ptr<TServerTransport>& serverTransport,
                                    const shared_ptr<TTransportFactory>& transportFactory,
                                    const shared_ptr<TProtocolFactory>& protocolFactory,
+                                   const shared_ptr<NettyProcessor>& nettyProcessor,
                                    const shared_ptr<TServerTransport>& nettyServerTransport,
                                    const shared_ptr<ThreadFactory>& threadFactory)
   : TServer(processor, serverTransport, transportFactory, protocolFactory),
+    nettyProcessor_(nettyProcessor),
     nettyServerTransport_(nettyServerTransport),
     threadFactory_(threadFactory),
     clients_(0),
@@ -129,6 +134,9 @@ void DualThreadedServer::serve() {
   shared_ptr<TTransport> outputTransport;
   shared_ptr<TProtocol> inputProtocol;
   shared_ptr<TProtocol> outputProtocol;
+
+  shared_ptr<NettyFramedTransport> inputNettyTransport;
+  shared_ptr<NettyProtocol> inputNettyProtocol;
   shared_ptr<TTransport> nettyClient;
 
   // Start the RPC server listening
@@ -209,6 +217,7 @@ void DualThreadedServer::serve() {
     // now let's try accepting a netty connection
     try
       {
+    	// TODO:  reset the netty items
     	// do the resets again
         outputProtocol.reset();
         inputProtocol.reset();
@@ -227,16 +236,40 @@ void DualThreadedServer::serve() {
       nettyClient = nettyServerTransport_->accept();
 
       // we got one!  spin off a thread to handle it
-      GlobalOutput.printf("Connected on netty port");
+      printf("Connected on netty port\n");
+
+      inputNettyTransport = shared_ptr<NettyFramedTransport>(new NettyFramedTransport(nettyClient));
+      inputNettyProtocol = shared_ptr<NettyProtocol>(new NettyProtocol(inputNettyTransport));
+
+      newlyNettyConnectedClient(shared_ptr<NettyConnectedClient>(
+          new NettyConnectedClient(nettyProcessor_,
+                               inputNettyProtocol,
+                               inputNettyProtocol,
+                               nettyClient),
+          bind(&DualThreadedServer::nettyDisposeConnectedClient, this, _1)));
+
       }
     catch (TTransportException& ttx)
       {
       if (ttx.getType() == TTransportException::TIMED_OUT)
         continue;	// loop back and wait for connection on either port
-      }
+      else if (ttx.getType() == TTransportException::END_OF_FILE
+                 || ttx.getType() == TTransportException::INTERRUPTED) {
+        // Server was interrupted.  This only happens when stopping.
+        break;
+      } else
+        {
+        // All other transport exceptions are logged.
+        // State of connection is unknown.  Done.
+        string errStr = string("TServerTransport died: ") + ttx.what();
+        GlobalOutput.printf(errStr.c_str());
+        break;
+        }
+      }	// try...catch
     }	// for
 
   releaseOneDescriptor("serverTransport", serverTransport_);
+  releaseOneDescriptor("nettyServerTransport", nettyServerTransport_);
 
   // Ensure post-condition of no active clients
   Synchronized s(clientMonitor_);
@@ -249,11 +282,16 @@ void DualThreadedServer::serve() {
 
 void DualThreadedServer::drainDeadClients() {
   // we're in a monitor here
-  while (!deadClientMap_.empty()) {
-    ClientMap::iterator it = deadClientMap_.begin();
-    it->second->join();
-    deadClientMap_.erase(it);
-  }
+	  while (!deadClientMap_.empty()) {
+	    ClientMap::iterator it = deadClientMap_.begin();
+	    it->second->join();
+	    deadClientMap_.erase(it);
+	  }
+	  while (!nettyDeadClientMap_.empty()) {
+	    NettyClientMap::iterator it = nettyDeadClientMap_.begin();
+	    it->second->join();
+	    nettyDeadClientMap_.erase(it);
+	  }
 }
 
 void DualThreadedServer::onClientConnected(const shared_ptr<TConnectedClient>& pClient) {
@@ -262,6 +300,15 @@ void DualThreadedServer::onClientConnected(const shared_ptr<TConnectedClient>& p
   boost::shared_ptr<Thread> pThread = threadFactory_->newThread(pRunnable);
   pRunnable->thread(pThread);
   activeClientMap_.insert(ClientMap::value_type(pClient.get(), pThread));
+  pThread->start();
+}
+
+void DualThreadedServer::onNettyClientConnected(const shared_ptr<NettyConnectedClient>& pClient) {
+  Synchronized sync(clientMonitor_);
+  boost::shared_ptr<NettyConnectedClientRunner> pRunnable = boost::make_shared<NettyConnectedClientRunner>(pClient);
+  boost::shared_ptr<Thread> pThread = threadFactory_->newThread(pRunnable);
+  pRunnable->thread(pThread);
+  nettyActiveClientMap_.insert(NettyClientMap::value_type(pClient.get(), pThread));
   pThread->start();
 }
 
@@ -277,14 +324,38 @@ void DualThreadedServer::onClientDisconnected(TConnectedClient* pClient) {
   }
 }
 
+void DualThreadedServer::onNettyClientDisconnected(NettyConnectedClient* pClient) {
+  Synchronized sync(clientMonitor_);
+  drainDeadClients(); // use the outgoing thread to do some maintenance on our dead client backlog
+  NettyClientMap::iterator it = nettyActiveClientMap_.find(pClient);
+  NettyClientMap::iterator end = it;
+  nettyDeadClientMap_.insert(it, ++end);
+  nettyActiveClientMap_.erase(it);
+  if (nettyActiveClientMap_.empty()) {
+    clientMonitor_.notify();
+  }
+}
+
 DualThreadedServer::TConnectedClientRunner::TConnectedClientRunner(const boost::shared_ptr<TConnectedClient>& pClient)
+  : pClient_(pClient) {
+}
+
+DualThreadedServer::NettyConnectedClientRunner::NettyConnectedClientRunner(const boost::shared_ptr<NettyConnectedClient>& pClient)
   : pClient_(pClient) {
 }
 
 DualThreadedServer::TConnectedClientRunner::~TConnectedClientRunner() {
 }
 
+DualThreadedServer::NettyConnectedClientRunner::~NettyConnectedClientRunner() {
+}
+
 void DualThreadedServer::TConnectedClientRunner::run() /* override */ {
+  pClient_->run();  // Run the client
+  pClient_.reset(); // The client is done - release it here rather than in the destructor for safety
+}
+
+void DualThreadedServer::NettyConnectedClientRunner::run() /* override */ {
   pClient_->run();  // Run the client
   pClient_.reset(); // The client is done - release it here rather than in the destructor for safety
 }
@@ -332,8 +403,28 @@ void DualThreadedServer::newlyConnectedClient(const boost::shared_ptr<TConnected
   onClientConnected(pClient);
 }
 
+void DualThreadedServer::newlyNettyConnectedClient(const boost::shared_ptr<NettyConnectedClient>& pClient) {
+  {
+    Synchronized sync(mon_);
+    ++clients_;
+    hwm_ = (std::max)(hwm_, clients_);
+  }
+
+  onNettyClientConnected(pClient);
+}
+
 void DualThreadedServer::disposeConnectedClient(TConnectedClient* pClient) {
   onClientDisconnected(pClient);
+  delete pClient;
+
+  Synchronized sync(mon_);
+  if (limit_ - --clients_ > 0) {
+    mon_.notify();
+  }
+}
+
+void DualThreadedServer::nettyDisposeConnectedClient(NettyConnectedClient* pClient) {
+  onNettyClientDisconnected(pClient);
   delete pClient;
 
   Synchronized sync(mon_);
