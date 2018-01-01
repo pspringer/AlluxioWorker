@@ -20,8 +20,13 @@ public:
 	boost::shared_ptr<transport::NettyFramedTransport> getTransport();
 
 	uint64_t readMessageBegin(uint32_t* status, uint64_t* fileID, uint64_t* segStart, uint64_t* segSize);
-	uint32_t readU32(uint32_t* u32);
+	uint64_t readU32(uint32_t* u32);
 	uint64_t readU64(uint64_t* u64);
+
+	uint64_t writeU16(const uint16_t u16);
+	uint64_t writeU32(const uint32_t u32);
+	uint64_t writeU64(const uint64_t u64);
+	uint64_t writeString(const std::string& str);
 
 protected:
 	boost::shared_ptr<transport::NettyFramedTransport>	trans_;

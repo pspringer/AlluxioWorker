@@ -149,6 +149,19 @@ bool NettyFramedTransport::readFrame() {
   return true;
 }
 
+// from TBufferBase.write()
+void NettyFramedTransport::write(const uint8_t* buf, uint64_t len)
+{
+	uint8_t* new_wBase = wBase_ + len;
+	if (new_wBase <= wBound_) {
+		std::memcpy(wBase_, buf, len);
+		wBase_ = new_wBase;
+		return;
+	}
+	writeSlow(buf, len);
+}
+
+// from TFramedTransport.writeSlow()
 void NettyFramedTransport::writeSlow(const uint8_t* buf, uint64_t len) {
   // Double buffer size until sufficient.
   uint64_t have = static_cast<uint64_t>(wBase_ - wBuf_.get());
@@ -181,13 +194,17 @@ void NettyFramedTransport::writeSlow(const uint8_t* buf, uint64_t len) {
   wBase_ += len;
 }
 
+// from TFramedTransport.flush()
 void NettyFramedTransport::flush() {
   int64_t sz_hbo, sz_nbo;
   assert(wBufSize_ > sizeof(sz_nbo));
 
   // Slip the frame size into the start of the buffer.
-  sz_hbo = static_cast<uint64_t>(wBase_ - (wBuf_.get() + sizeof(sz_nbo)));
-  sz_nbo = (int64_t)htonl((uint64_t)(sz_hbo));
+//  sz_hbo = static_cast<uint64_t>(wBase_ - (wBuf_.get() + sizeof(sz_nbo)));
+  // Netty needs to include space for frame size (8 bytes) in the total size
+  sz_hbo = static_cast<uint64_t>(wBase_ - (wBuf_.get()));
+//  sz_nbo = (int64_t)htonl((uint64_t)(sz_hbo));
+  sz_nbo = (int64_t)protocol::TNetworkBigEndian::toWire64(sz_hbo);
   memcpy(wBuf_.get(), (uint8_t*)&sz_nbo, sizeof(sz_nbo));
 
   if (sz_hbo > 0) {
@@ -198,7 +215,9 @@ void NettyFramedTransport::flush() {
     wBase_ = wBuf_.get() + sizeof(sz_nbo);
 
     // Write size and frame body.
-    transport_->write(wBuf_.get(), static_cast<uint64_t>(sizeof(sz_nbo)) + sz_hbo);
+//    transport_->write(wBuf_.get(), static_cast<uint64_t>(sizeof(sz_nbo)) + sz_hbo);
+    // Netty already accounts for the 8 bytes of size information
+    transport_->write(wBuf_.get(), sz_hbo);
   }
 
   // Flush the underlying transport.
@@ -216,6 +235,7 @@ void NettyFramedTransport::flush() {
   }
 }
 
+// from TFramedTransport.writeEnd()
 uint64_t NettyFramedTransport::writeEnd() {
   return static_cast<uint64_t>(wBase_ - wBuf_.get());
 }

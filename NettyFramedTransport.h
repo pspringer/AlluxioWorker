@@ -30,15 +30,15 @@ public:
   static const int DEFAULT_MAX_FRAME_SIZE = 256 * 1024 * 1024;
 
   /// Use default buffer sizes.
-  NettyFramedTransport()
-    : transport_(),
-      rBufSize_(0),
-      wBufSize_(DEFAULT_BUFFER_SIZE),
-      rBuf_(),
-      wBuf_(new uint8_t[wBufSize_]),
-      bufReclaimThresh_((std::numeric_limits<uint64_t>::max)()) {
-    initPointers();
-  }
+//  NettyFramedTransport()
+//    : transport_(),
+//      rBufSize_(0),
+//      wBufSize_(DEFAULT_BUFFER_SIZE),
+//      rBuf_(),
+//      wBuf_(new uint8_t[wBufSize_]),
+//      bufReclaimThresh_((std::numeric_limits<uint64_t>::max)()) {
+//    initPointers();
+//  }
 
   NettyFramedTransport(boost::shared_ptr<TTransport> transport)
     : transport_(transport),
@@ -51,18 +51,18 @@ public:
     initPointers();
   }
 
-  NettyFramedTransport(boost::shared_ptr<TTransport> transport,
-                   uint64_t sz,
-                   uint64_t bufReclaimThresh = (std::numeric_limits<uint64_t>::max)())
-    : transport_(transport),
-      rBufSize_(0),
-      wBufSize_(sz),
-      rBuf_(),
-      wBuf_(new uint8_t[wBufSize_]),
-      bufReclaimThresh_(bufReclaimThresh),
-      maxFrameSize_(DEFAULT_MAX_FRAME_SIZE) {
-    initPointers();
-  }
+//  NettyFramedTransport(boost::shared_ptr<TTransport> transport,
+//                   uint64_t sz,
+//                   uint64_t bufReclaimThresh = (std::numeric_limits<uint64_t>::max)())
+//    : transport_(transport),
+//      rBufSize_(0),
+//      wBufSize_(sz),
+//      rBuf_(),
+//      wBuf_(new uint8_t[wBufSize_]),
+//      bufReclaimThresh_(bufReclaimThresh),
+//      maxFrameSize_(DEFAULT_MAX_FRAME_SIZE) {
+//    initPointers();
+//  }
 
   void open() { transport_->open(); }
 
@@ -79,6 +79,7 @@ public:
   uint64_t readMed(uint8_t* buf, uint64_t len);
   uint64_t readSlow(uint8_t* buf, uint64_t len);
 
+  void write(const uint8_t* buf, uint64_t len);
   void writeSlow(const uint8_t* buf, uint64_t len);
 
   void flush();
@@ -138,7 +139,7 @@ protected:
 
     // Pad the buffer so we can insert the size later.
     int64_t pad = 0;
-//    this->write((uint8_t*)&pad, sizeof(pad));
+    this->write((uint8_t*)&pad, sizeof(pad));
   }
 
   boost::shared_ptr<TTransport> transport_;
