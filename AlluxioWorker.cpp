@@ -132,7 +132,8 @@ int main()
 
 	    cout << "Requesting ID" << endl;
 	    WorkerNetAddress wna = WorkerNetAddress();
-	    wna.__set_host("192.168.1.129");
+	    // TODO:  use a getHostID call
+	    wna.__set_host("192.168.1.69");
 	    wna.__set_rpcPort(29998);
 	    wna.__set_dataPort(29999);
 //	    int64_t theID = client.getWorkerId(WorkerNetAddress("192.168.1.129",0,0,0));
