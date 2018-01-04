@@ -15,6 +15,11 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
+ *
+ * Modified by Paul Springer
+ * Modifications copyright 2018 by Paul Springer
+ * Modifications licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use the modifications except in compliance with the License.
  */
 
 #ifndef _THRIFT_SERVER_NettyConnectedClient_H_
