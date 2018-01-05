@@ -3,3 +3,9 @@
 /oldNonblockingServerSocket.h
 /DebugServerSocket.h
 /oldNonblockingServerSocket.cpp
+/DebugServerSocket.cpp
+/DebugSimpleServer.cpp
+/DebugSimpleServer.h
+/DebugSocket.cpp
+/DebugSocket.h
+/thrift
