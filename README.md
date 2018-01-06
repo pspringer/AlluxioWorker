@@ -5,3 +5,6 @@ This is not a complete port of the worker component of Alluxio to C++.  But it i
 * Interfaces with version 1.4 of Alluxio master and client (other versions not tested)
 * Needs Thrift 0.10 libraries and includes (other versions not tested)
 * Needs Boost 1.59 includes (other versions not tested)
+#### Motivation
+#### Caveats
+#### Technical Information
