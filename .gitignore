@@ -9,3 +9,5 @@
 /DebugSocket.cpp
 /DebugSocket.h
 /thrift
+.cproject
+.project
