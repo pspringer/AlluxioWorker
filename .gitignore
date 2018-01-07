@@ -8,6 +8,5 @@
 /DebugSimpleServer.h
 /DebugSocket.cpp
 /DebugSocket.h
-thrift/
 .cproject
 .project
