@@ -7,4 +7,5 @@ This is not a complete port of the worker component of Alluxio to C++.  But it i
 * Needs Boost 1.59 includes (other versions not tested)
 #### Motivation
 #### Caveats
-#### Technical Information
+#### Usage Example
+#### How It Works
