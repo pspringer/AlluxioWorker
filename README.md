@@ -6,6 +6,7 @@ This is not a complete port of the worker component of Alluxio to C++.  But it i
 * Needs Thrift 0.10 libraries and includes (other versions not tested)
 * Needs Boost 1.59 includes (other versions not tested)
 #### Motivation
+I developed this with an eye toward allowing Alluxio workers to run on an advanced parallel system that did not have standard Linux file support, and instead used RAM to store file contents.  The system had no implementation of Java, only C++, and so there was a need to port the Alluxio worker component to C++, and to leave open the implementation of the underlying file system (UFS).
 #### Caveats
 #### Usage Example
 #### How It Works
