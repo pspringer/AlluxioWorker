@@ -8,8 +8,10 @@ This is not a complete port of the worker component of Alluxio to C++.  But it i
 #### Motivation
 I developed this with an eye toward allowing Alluxio workers to run on an advanced parallel system that did not have standard Linux file support, and instead used RAM to store file contents.  The system had no implementation of Java, only C++, and so there was a need to port the Alluxio worker component to C++, and to leave open the implementation of the underlying file system (UFS).
 #### Caveats
+1.  Supports only the SIMPLE mode of SASL security, which is the default
 #### Usage Example
 1.  Download alluxio-1.4.0, built for hadoop2.7 from alluxio.org
+1.  Install per documentation
 1.  Replace the IP address at about line 111 in AlluxioWorker.cpp with the address of where your Alluxio master will be running
 1.  Compile
 #### How It Works
