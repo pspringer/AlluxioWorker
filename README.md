@@ -13,8 +13,10 @@ I developed this with an eye toward allowing Alluxio workers to run on an advanc
 1.  Download alluxio-1.4.0 (hadoop2.7 build) from alluxio.org
 1.  Install per documentation
 1.  Move to the Alluxio bin directory.  Start up master and client using the command "./alluxio-start local".  Refer to http://www.alluxio.org/docs/master/en/Getting-Started.html
-1.  Create test file *when* using the following command:  echo "Now" > ..underFSStorage/when
-1.  Type "./alluxio fs cat /when" to make sure the file is visible to Alluxio
+1.  Create test file *when* using the following command:  echo "Now" > ../underFSStorage/when
+1.  Type "./alluxio fs cat /when" to make sure the file is visible to Alluxio.  It should contain exactly 4 bytes, including the newline character at the end.
 1.  Replace the IP address at about line 111 in AlluxioWorker.cpp with the address of where your Alluxio master will be running
 1.  Compile
+1.  Stop all Alluxio processes by entering "./alluxio-stop local"
+1.  Start just the master process by entering "./alluxio-start master"
 #### How It Works
