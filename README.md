@@ -19,4 +19,9 @@ I developed this with an eye toward allowing Alluxio workers to run on an advanc
 1.  Compile
 1.  Stop all Alluxio processes by entering "./alluxio-stop local"
 1.  Start just the master process by entering "./alluxio-start master"
+1.  Wait until the .../logs/master.log file shows a message that includes the words "startServing"
+1.  Start up the C++ version of the Alluxio worker
+1.  Wait until master.log shows an entry with the words "workerRegister"
+1.  Invoke the Alluxio client, within the bin directory, with the command "./alluxio fs cat /when"
+1.  Verify that the client types out the contents of the *when* file that you created previously
 #### How It Works
