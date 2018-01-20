@@ -16,6 +16,7 @@ I developed this with an eye toward allowing Alluxio workers to run on an advanc
 1.  Create test file *when* using the following command:  echo "Now" > ../underFSStorage/when
 1.  Type "./alluxio fs cat /when" to make sure the file is visible to Alluxio.  It should contain exactly 4 bytes, including the newline character at the end.
 1.  Replace the IP address at about line 111 in AlluxioWorker.cpp with the address of where your Alluxio master will be running
+1.  At about line 131 in AlluxioWorker.cpp, replace the three "pls" characters with the user name you intend to use on your system.  If your user name is longer than 3 characters, adjust the length accordingly.  The length number (currently 20) appears on that line and the line following.  So for example, if your user name is 4 characters, change the 20 in each of those two lines to 21.
 1.  Compile
 1.  Stop all Alluxio processes by entering "./alluxio-stop local"
 1.  Start just the master process by entering "./alluxio-start master"
