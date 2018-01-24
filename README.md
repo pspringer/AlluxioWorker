@@ -28,3 +28,4 @@ I developed this with an eye toward allowing Alluxio workers to run on an advanc
 1.  Invoke the Alluxio client, within the bin directory, with the command "./alluxio fs cat /when"
 1.  Verify that the client types out the contents of the *when* file that you created previously
 #### How It Works
+The Alluxio master component knows about the file system, such as file names and directories and so on.  The worker in this repository knows what IP and port number (19998) to use to communicate with the master.  It registers itself, and the client, once it starts up, queries the master for this information.  The client uses that information to initiate a connection to the worker if it needs the contents of a file.  The worker acts like a file or data server, sending the file contents directly to the client.
