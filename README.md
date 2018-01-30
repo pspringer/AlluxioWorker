@@ -29,3 +29,5 @@ I developed this with an eye toward allowing Alluxio workers to run on an advanc
 1.  Verify that the client types out the contents of the *when* file that you created previously
 #### How It Works
 The Alluxio master component knows about the file system, such as file names and directories and so on.  The worker in this repository knows what IP and port number (19998) to use to communicate with the master.  It registers itself, and the client, once it starts up, queries the master for this information.  The client uses that information to initiate a connection to the worker if it needs the contents of a file.  The worker acts like a file or data server, sending the file contents directly to the client.
+
+The original worker code used the "Netty" communication package to handle the data server work, and the "Thrift" package to handle all other communication.  Thrift has been ported to C++ already, but Netty has not, so my decision was to use Thrift for the data server code in my version of the worker, even though Thrift is not as efficient as Netty for this.  If Netty is ever ported to C++, it would be desirable to plug that in to this software.
